@@ -1,35 +1,30 @@
 "use client";
 // Create a context
 import { createContext, useContext, useEffect, useState } from "react";
-export interface Wallet {
-  privateKey: string;
-  publicKey: string;
-}
-export interface Account {
-  blockchain: {
-    type: Blockchain;
-    wallets: Wallet[];
-  };
-}
+import { User, Account, Blockchain, Wallet } from "./app/lib/user";
 
-export type Blockchain = "SOLANA" | "ETHEREUM";
 interface UserContextType {
-  user: { accounts: Account[] } | null;
-  setUser: React.Dispatch<React.SetStateAction<{ accounts: Account[] } | null>>;
+  user: User | null;
+  setUser: React.Dispatch<React.SetStateAction<User | null>>;
 }
-
 const UserContext = createContext<UserContextType | null>(null);
+
 export const Provider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<{ accounts: Account[] } | null>(null);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    const currentUser = localStorage.getItem("user");
-    if (!currentUser) {
-      const initialUser = { accounts: [] };
-      localStorage.setItem("user", JSON.stringify(null));
-      setUser(initialUser);
+    const storedUser = localStorage.getItem("user");
+
+    if (storedUser && JSON.parse(storedUser).accounts.length > 0) {
+      const parsedUser = JSON.parse(storedUser);
+      console.log(parsedUser);
+      setUser((prev) => new User(parsedUser.accounts));
+      //working on rendering accounts
     } else {
-      setUser(JSON.parse(currentUser!));
+      const initialUser = new User();
+
+      setUser(initialUser);
+      localStorage.setItem("user", JSON.stringify(initialUser));
     }
   }, []);
 

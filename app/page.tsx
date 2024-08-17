@@ -7,11 +7,10 @@ import { UserAccount } from "./components/UserAccount";
 import { Create } from "./components/Create";
 export default function Home() {
   const store = useStore();
-  console.log(store);
 
-  if (!store?.user) {
+  if (store?.user?.getAccounts().length == 0) {
     return <Create />;
   } else {
-    return <UserAccount accounts={store?.user.accounts} />;
+    return <UserAccount />;
   }
 }

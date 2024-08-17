@@ -3,13 +3,13 @@ import { BackButton, Button, DarkButton } from "./ui/Button";
 import { Blockchain, useStore } from "@/provider";
 import { generateNewMnemonic, generateSolanaWallet } from "../lib/utils";
 import { time } from "console";
+import { User } from "../lib/user";
 
 export const Create = () => {
   const [activeScreen, setActiveScreen] = useState<number>(2);
   const [blockchain, setBlockchain] = useState<Blockchain>();
 
   function handleBlockchain(chain: Blockchain) {
-    console.log(chain);
     setBlockchain(chain);
     setActiveScreen(3);
   }
@@ -163,6 +163,7 @@ const Screen3 = ({ action, back }: { action: any; back: any }) => {
 };
 
 const Screen4 = ({ action, back }: { action: any; back: any }) => {
+  const store = useStore();
   const [p, setP] = useState(false);
   const [mnemonic, setmMnemonic] = useState("");
   const [words, setWords] = useState<string[]>([]);
@@ -187,10 +188,19 @@ const Screen4 = ({ action, back }: { action: any; back: any }) => {
     setCopyText("Copied!");
   }
 
-  const store = useStore();
-  const handleWalletGenerate = async () => {
-    console.log(store?.user);
-    const s = await generateSolanaWallet(store?.user, mnemonic);
+  const handleAccountGenerate = async () => {
+    store?.user?.createAccount(mnemonic, "SOLANA");
+
+    const response = await generateSolanaWallet(0, mnemonic);
+
+    if (response.err) {
+      alert(response.msg);
+    } else {
+      store?.user?.addWalletToAccount(0, response.wallet!);
+      store?.setUser(new User(store?.user?.accounts));
+      localStorage.setItem("user", JSON.stringify(store?.user));
+      console.log("AA", store?.user);
+    }
   };
 
   return (
@@ -252,7 +262,7 @@ const Screen4 = ({ action, back }: { action: any; back: any }) => {
           {!p ? (
             <DarkButton text={"Next"} disabled={!p} action={null} />
           ) : (
-            <Button text={"Next"} action={handleWalletGenerate} />
+            <Button text={"Next"} action={handleAccountGenerate} />
           )}
         </div>
       </div>
