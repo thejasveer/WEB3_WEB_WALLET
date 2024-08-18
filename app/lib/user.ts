@@ -1,3 +1,5 @@
+import { debug } from "console";
+
  
 export type Blockchain = "SOLANA" | "ETHEREUM";
 export interface Wallet {
@@ -10,23 +12,31 @@ export interface Account {
     blockchain: Blockchain;
   }
 export class User{
-    accounts: Account[] = [];
+    accounts: Account[]  = [];
   
-    constructor(accounts: Account[] = []) {
-        this.accounts = accounts;
+    constructor(accounts?: Account[]) {
+        
+        this.accounts = accounts ? [...accounts] : []; 
       }
 
-    createAccount(mnemonic: string, blockchain: Blockchain): number {
-        const newAccount: Account = {
-          wallets: [],
-          mnemonic,
-          blockchain,
-        };
-        this.accounts.push(newAccount);
-        return this.accounts.length-1;
+    createAccount(mnemonic: string, blockchain: Blockchain): any {
+        if(this.accounts){
+           
+
+            const newAccount: Account = {
+            wallets: [],
+            mnemonic,
+            blockchain,
+            };
+            console.log("Ss",this.accounts)
+    
+            this.accounts.push(newAccount);
+            return this.accounts?.length-1;
+        }
       }
     // Method to add a wallet to an account
     addWalletToAccount(accountIndex: number, wallet: Wallet): void {
+        if(this.accounts)
         if (this.accounts[accountIndex]) {
              this.accounts[accountIndex].wallets.push(wallet);
             //  localStorage.setItem(user,{})
@@ -51,3 +61,4 @@ export class User{
     }
 
 }
+ 

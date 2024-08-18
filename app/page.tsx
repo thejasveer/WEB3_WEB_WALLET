@@ -1,16 +1,18 @@
 "use client";
 
-import { useStore } from "@/provider";
 import { Welcome } from "./components/Welcome";
 import { userAgentFromString } from "next/server";
-import { UserAccount } from "./components/UserAccount";
+import { UserAccount } from "./components/UserAccounts";
 import { Create } from "./components/Create";
+import { useRecoilValue } from "recoil";
+import { userAtom } from "./store/userAtom";
+import { Dashboard } from "./components/ui/Dashboard";
 export default function Home() {
-  const store = useStore();
+  const user = useRecoilValue(userAtom);
 
-  if (store?.user?.getAccounts().length == 0) {
+  if (user?.getAccounts().length == 0) {
     return <Create />;
   } else {
-    return <UserAccount />;
+    return <Dashboard />;
   }
 }

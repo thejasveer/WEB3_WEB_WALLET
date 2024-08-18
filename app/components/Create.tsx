@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { BackButton, Button, DarkButton } from "./ui/Button";
-import { Blockchain, useStore } from "@/provider";
+import { useRouter } from "next/navigation";
 import { generateNewMnemonic, generateSolanaWallet } from "../lib/utils";
 import { time } from "console";
-import { User } from "../lib/user";
+import { Blockchain, User } from "../lib/user";
+import { useRecoilState } from "recoil";
+import { userAtom } from "../store/userAtom";
 
 export const Create = () => {
   const [activeScreen, setActiveScreen] = useState<number>(2);
@@ -163,14 +165,14 @@ const Screen3 = ({ action, back }: { action: any; back: any }) => {
 };
 
 const Screen4 = ({ action, back }: { action: any; back: any }) => {
-  const store = useStore();
+  const [user, setUser] = useRecoilState(userAtom);
   const [p, setP] = useState(false);
   const [mnemonic, setmMnemonic] = useState("");
   const [words, setWords] = useState<string[]>([]);
   const [copytext, setCopyText] = useState(
     "Click anywhere to copy in the card"
   );
-
+  const router = useRouter();
   useEffect(() => {
     setTimeout(() => {
       setCopyText("Click anywhere to copy in the card");
@@ -181,6 +183,7 @@ const Screen4 = ({ action, back }: { action: any; back: any }) => {
     const mn = generateNewMnemonic();
     setmMnemonic((prev) => mn);
     setWords((prev) => mn.split(" "));
+    console.log(user);
   }, []);
 
   function copyPhrase() {
@@ -189,17 +192,20 @@ const Screen4 = ({ action, back }: { action: any; back: any }) => {
   }
 
   const handleAccountGenerate = async () => {
-    store?.user?.createAccount(mnemonic, "SOLANA");
+    if (user) {
+      const newUser = new User(user.accounts); // Create a new instance
+      const accountIndex = newUser.createAccount(mnemonic, "SOLANA");
 
-    const response = await generateSolanaWallet(0, mnemonic);
+      const response = await generateSolanaWallet(0, mnemonic);
 
-    if (response.err) {
-      alert(response.msg);
-    } else {
-      store?.user?.addWalletToAccount(0, response.wallet!);
-      store?.setUser(new User(store?.user?.accounts));
-      localStorage.setItem("user", JSON.stringify(store?.user));
-      console.log("AA", store?.user);
+      if (response.err) {
+        alert(response.msg);
+      } else {
+        newUser.addWalletToAccount(accountIndex, response.wallet!);
+        setUser(newUser);
+      }
+      const path = "/?account=" + accountIndex;
+      router.push(path);
     }
   };
 
