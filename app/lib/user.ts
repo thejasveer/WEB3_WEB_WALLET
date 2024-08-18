@@ -6,10 +6,14 @@ export interface Wallet {
     privateKey: string;
     publicKey: string;
   }
-export interface Account {
+
+  export interface Network{
     wallets: Wallet[];
-    mnemonic: string;
     blockchain: Blockchain;
+  }
+export interface Account {
+    mnemonic: string;
+    networks: Network[]
   }
 export class User{
     accounts: Account[]  = [];
@@ -24,9 +28,12 @@ export class User{
            
 
             const newAccount: Account = {
-            wallets: [],
-            mnemonic,
-            blockchain,
+                networks:[{
+                            wallets: [],
+                            blockchain:blockchain
+                        }], 
+                 mnemonic,
+           
             };
             console.log("Ss",this.accounts)
     
@@ -35,10 +42,10 @@ export class User{
         }
       }
     // Method to add a wallet to an account
-    addWalletToAccount(accountIndex: number, wallet: Wallet): void {
+    addWalletToNetwork(accountIndex: number, networkIndex:number,wallet: Wallet): void {
         if(this.accounts)
         if (this.accounts[accountIndex]) {
-             this.accounts[accountIndex].wallets.push(wallet);
+             this.accounts[accountIndex].networks[networkIndex].wallets.push(wallet);
             //  localStorage.setItem(user,{})
 
             } else {

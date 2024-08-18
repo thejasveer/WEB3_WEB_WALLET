@@ -21,7 +21,14 @@ export const UserAccounts = () => {
     // setAccounts();
   }, [currentAccountIndex]);
   function selectAccount(i: number) {
-    setCurrentAccount((prev) => i);
+    const currentParams = new URLSearchParams(
+      Array.from(searchParams.entries())
+    ); // Get current search params
+    currentParams.set("account", (i + 1).toString());
+
+    router.replace(`?${currentParams.toString()}`, { scroll: false });
+    const path = "/?account=" + (i + 1);
+    router.push(path);
   }
   function generateNewAccouunt() {
     console.log("uye");
@@ -36,8 +43,8 @@ export const UserAccounts = () => {
               <AccountD
                 text={`A${i + 1}`}
                 key={"account_" + i}
-                selected={currentAccount == i}
-                action={selectAccount}
+                selected={currentAccount - 1 == i}
+                action={() => selectAccount(i)}
               />
             );
           })}

@@ -2,11 +2,11 @@
 
 import { Welcome } from "./components/Welcome";
 import { userAgentFromString } from "next/server";
-import { UserAccount } from "./components/UserAccounts";
+import { UserAccounts } from "./components/UserAccounts";
 import { Create } from "./components/Create";
 import { useRecoilValue } from "recoil";
 import { userAtom } from "./store/userAtom";
-import { Dashboard } from "./components/ui/Dashboard";
+import { Dashboard } from "./components/Dashboard";
 export default function Home() {
   const user = useRecoilValue(userAtom);
 

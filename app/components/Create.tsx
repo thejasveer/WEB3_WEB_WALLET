@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { BackButton, Button, DarkButton } from "./ui/Button";
 import { useRouter } from "next/navigation";
-import { generateNewMnemonic, generateSolanaWallet } from "../lib/utils";
-import { time } from "console";
+import { generateNewMnemonic } from "../lib/utils";
+import { generateSolanaWallet } from "../lib/sol";
+
 import { Blockchain, User } from "../lib/user";
 import { useRecoilState } from "recoil";
 import { userAtom } from "../store/userAtom";
+import { generateEthWallet } from "../lib/eth";
 
 export const Create = () => {
   const [activeScreen, setActiveScreen] = useState<number>(2);
@@ -39,6 +41,7 @@ export const Create = () => {
       return (
         <Screen4
           back={() => setActiveScreen(3)}
+          blockchain={blockchain!}
           action={() => handleBlockchain}
         />
       );
@@ -164,7 +167,15 @@ const Screen3 = ({ action, back }: { action: any; back: any }) => {
   );
 };
 
-const Screen4 = ({ action, back }: { action: any; back: any }) => {
+const Screen4 = ({
+  action,
+  back,
+  blockchain,
+}: {
+  blockchain: Blockchain;
+  action: any;
+  back: any;
+}) => {
   const [user, setUser] = useRecoilState(userAtom);
   const [p, setP] = useState(false);
   const [mnemonic, setmMnemonic] = useState("");
@@ -194,17 +205,26 @@ const Screen4 = ({ action, back }: { action: any; back: any }) => {
   const handleAccountGenerate = async () => {
     if (user) {
       const newUser = new User(user.accounts); // Create a new instance
-      const accountIndex = newUser.createAccount(mnemonic, "SOLANA");
-
-      const response = await generateSolanaWallet(0, mnemonic);
+      const accountIndex = newUser.createAccount(mnemonic, blockchain);
+      const networkIndex = 0;
+      let response;
+      if (blockchain == "ETHEREUM") {
+        response = await generateEthWallet(0, mnemonic);
+      } else {
+        response = await generateSolanaWallet(0, mnemonic);
+      }
 
       if (response.err) {
         alert(response.msg);
       } else {
-        newUser.addWalletToAccount(accountIndex, response.wallet!);
+        newUser.addWalletToNetwork(
+          accountIndex,
+          networkIndex,
+          response.wallet!
+        );
         setUser(newUser);
       }
-      const path = "/?account=" + accountIndex;
+      const path = "/?account=" + (accountIndex + 1);
       router.push(path);
     }
   };
