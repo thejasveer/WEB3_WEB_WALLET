@@ -153,7 +153,7 @@ const Screen3 = ({ action, back }: { action: any; back: any }) => {
           />
           <label
             onClick={() => setP(!p)}
-            className="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300"
+            className="ms-2 text-sm font-medium text-zinc-500 dark:text-gray-300"
           >
             I understand that I am responsible for saving my secret recovery
             phrase, and that it is the only way to recover my wallet.
@@ -279,7 +279,7 @@ const Screen4 = ({
           />
           <label
             onClick={() => setP(!p)}
-            className="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300"
+            className="ms-2 text-sm font-medium text-zinc-500 dark:text-gray-300"
           >
             I saved my secret recovery phrase.
           </label>

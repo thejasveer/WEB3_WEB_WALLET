@@ -1,25 +1,24 @@
 import { Dropdown } from "./Dropdown";
 import { DropdownItem } from "./DropdownItem";
 
-export const Filter = ({
-  label,
-  items,
-  action,
-}: {
-  label: string;
-  items: any;
-  action: any;
-}) => {
+export const Filter = ({ label, items }: { label: string; items: any }) => {
   return (
     <div>
       <Dropdown label={label}>
         {items.map((item: any, i: number) => {
           return (
-            <DropdownItem
+            <div
               key={label + "_" + i}
-              label={item.name}
-              action={item.action}
-            />
+              className={`${
+                i === items.length - 1 && "border-t border-zinc-700"
+              }`}
+            >
+              <DropdownItem
+                label={item.name}
+                selected={item.selected}
+                action={item.action}
+              />
+            </div>
           );
         })}
       </Dropdown>

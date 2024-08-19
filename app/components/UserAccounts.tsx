@@ -69,8 +69,8 @@ const AccountD = ({
       onClick={action}
       key={Math.random()}
       className={`  ${
-        selected ? "  text-blue-200 bg-blue-700 " : "bg-zinc-700 "
-      }mt-2 size-10 flex rounded-full  justify-center  items-center`}
+        selected ? "  text-blue-200 bg-blue-700 " : "bg-zinc-700 text-zinc-300 "
+      } mt-2 size-10 flex rounded-full cursor-pointer justify-center  items-center`}
     >
       {text}
     </div>

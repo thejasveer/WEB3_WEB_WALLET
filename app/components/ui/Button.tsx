@@ -33,7 +33,7 @@ export const DarkButton = ({
 
 export const BackButton = ({ action }: { action: any }) => {
   return (
-    <div className="flex gap-2" onClick={action}>
+    <div className="flex gap-2 text-zinc-200" onClick={action}>
       <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 20 20"
@@ -49,5 +49,4 @@ export const BackButton = ({ action }: { action: any }) => {
       <span>Back</span>
     </div>
   );
-  s;
 };

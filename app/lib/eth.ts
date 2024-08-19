@@ -27,6 +27,7 @@ export async function generateEthWallet(count: number, mnemonicStr: string) {
     const newWallet: Wallet = {
       publicKey: wallet.address,
       privateKey: privateKey,
+      title: "Wallet " + (count + 1),
     };
 
     return {
