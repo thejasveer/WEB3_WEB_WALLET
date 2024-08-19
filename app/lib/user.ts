@@ -64,7 +64,25 @@ export class User {
   ): void {
     if (this.accounts)
       if (this.accounts[accountIndex]) {
-        this.accounts[accountIndex].networks[networkIndex].wallets.push(wallet);
+        const account = this.accounts[accountIndex];
+        const updatedNetworks = account.networks.map((network, index) => {
+          if (index === networkIndex) {
+            return {
+              ...network,
+              wallets: [...network.wallets, wallet],
+            };
+          }
+          return network;
+        });
+
+        const updatedAccount = {
+          ...account,
+          networks: updatedNetworks,
+        };
+
+        this.accounts = this.accounts.map((acc, i) =>
+          i === accountIndex ? updatedAccount : acc
+        );
       } else {
         throw new Error("Account does not exist");
       }

@@ -57,12 +57,15 @@ export const Wallets = () => {
         const networkIndex = networks?.findIndex(
           (network) => network.blockchain === selectedNetwork?.blockchain
         );
-        newUser.addWalletToNetwork(
+        const upadteduser = newUser.addWalletToNetwork(
           currentAccount - 1,
           networkIndex!,
           response.wallet!
         );
-        setUser(newUser);
+        setUser((prev) => newUser);
+        setSelectedWallet((prev) => response.wallet);
+        setWalletToggle(false);
+        //update state
       }
     }
   }
@@ -135,7 +138,7 @@ export const WalletList = ({
   wallets: WalletType[] | undefined;
 }) => {
   return (
-    <div className="w-full ">
+    <div className="w-full  flex flex-col gap-2 ">
       {wallets?.map((w, i) => {
         return (
           <WalletDetails
