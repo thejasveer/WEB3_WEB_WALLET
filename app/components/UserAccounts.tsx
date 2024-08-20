@@ -31,12 +31,11 @@ export const UserAccounts = () => {
     router.push(path);
   }
   function generateNewAccouunt() {
-    console.log("uye");
     router.push("/create");
   }
   return (
-    <div>
-      <div className="flex flex-col gap-2   ">
+    <div className="flex flex-col gap-2 items-center ">
+      <div className="flex flex-col gap-2 items-center  ">
         {user &&
           user.accounts?.map((s, i) => {
             return (

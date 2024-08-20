@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BackButton, Button, DarkButton } from "./ui/Button";
 import { useRouter } from "next/navigation";
 import { generateNewMnemonic } from "../lib/utils";
@@ -10,8 +10,9 @@ import { userAtom } from "../store/userAtom";
 import { generateEthWallet } from "../lib/eth";
 
 export const Create = () => {
-  const [activeScreen, setActiveScreen] = useState<number>(2);
+  const [activeScreen, setActiveScreen] = useState<number>(1);
   const [blockchain, setBlockchain] = useState<Blockchain>();
+  const [isImport, setIsImport] = useState(false);
 
   function handleBlockchain(chain: Blockchain) {
     setBlockchain(chain);
@@ -19,7 +20,15 @@ export const Create = () => {
   }
   switch (activeScreen) {
     case 1:
-      return <Screen1 action={() => setActiveScreen(2)} />;
+      return (
+        <Screen1
+          action1={() => setActiveScreen(2)}
+          action2={() => {
+            setIsImport(true);
+            setActiveScreen(2);
+          }}
+        />
+      );
       break;
     case 2:
       return (
@@ -40,6 +49,7 @@ export const Create = () => {
     case 4:
       return (
         <Screen4
+          isImport={isImport}
           back={() => setActiveScreen(3)}
           blockchain={blockchain!}
           action={() => handleBlockchain}
@@ -51,7 +61,7 @@ export const Create = () => {
   }
 };
 
-const Screen1 = ({ action }: { action: any }) => {
+const Screen1 = ({ action1, action2 }: { action2: any; action1: any }) => {
   return (
     <>
       <div className="flex flex-col h-[80vh] justify-around gap-2">
@@ -59,8 +69,8 @@ const Screen1 = ({ action }: { action: any }) => {
           Lets get started
         </div>
         <div className="flex flex-col gap-2">
-          <Button text={"Create new Wallet"} action={action} />
-          <DarkButton text={"Import Wallet"} action={null} />
+          <Button text={"Create new Wallet"} action={action1} />
+          <DarkButton text={"Import Wallet"} action={action2} />
         </div>
       </div>
     </>
@@ -168,17 +178,21 @@ const Screen3 = ({ action, back }: { action: any; back: any }) => {
 };
 
 const Screen4 = ({
+  isImport,
   action,
   back,
   blockchain,
 }: {
+  isImport: boolean;
   blockchain: Blockchain;
   action: any;
   back: any;
 }) => {
   const [user, setUser] = useRecoilState(userAtom);
   const [p, setP] = useState(false);
-  const [mnemonic, setmMnemonic] = useState("");
+  const mnemonic = useRef("");
+  const [wordCount, setWordCount] = useState(12);
+  const [inputValues, setInputValues] = useState(Array(wordCount).fill(""));
   const [words, setWords] = useState<string[]>([]);
   const [copytext, setCopyText] = useState(
     "Click anywhere to copy in the card"
@@ -191,27 +205,32 @@ const Screen4 = ({
   }, [copytext]);
 
   useEffect(() => {
-    const mn = generateNewMnemonic();
-    setmMnemonic((prev) => mn);
-    setWords((prev) => mn.split(" "));
-    console.log(user);
+    if (!isImport) {
+      const mn = generateNewMnemonic();
+      mnemonic.current = mn;
+      setWords((prev) => mn.split(" "));
+    }
   }, []);
 
   function copyPhrase() {
-    navigator?.clipboard.writeText(mnemonic);
+    navigator?.clipboard.writeText(mnemonic.current);
     setCopyText("Copied!");
   }
 
   const handleAccountGenerate = async () => {
     if (user) {
+      if (isImport) {
+        mnemonic.current = inputValues.join(" ");
+        console.log(mnemonic);
+      }
       const newUser = new User(user.accounts); // Create a new instance
-      const accountIndex = newUser.createAccount(mnemonic, blockchain);
+      const accountIndex = newUser.createAccount(mnemonic.current, blockchain);
       const networkIndex = 0;
       let response;
       if (blockchain == "ETHEREUM") {
-        response = await generateEthWallet(0, mnemonic);
+        response = await generateEthWallet(0, mnemonic.current);
       } else {
-        response = await generateSolanaWallet(0, mnemonic);
+        response = await generateSolanaWallet(0, mnemonic.current);
       }
 
       if (response.err) {
@@ -229,6 +248,25 @@ const Screen4 = ({
     }
   };
 
+  const handlePaste = (event: any) => {
+    const pastedData = event.clipboardData.getData("text").split(" ");
+
+    mnemonic.current = pastedData;
+    const newInputValues = [...inputValues];
+
+    pastedData.forEach((word: string, index: number) => {
+      if (index < newInputValues.length) {
+        newInputValues[index] = word;
+      }
+    });
+
+    setInputValues(newInputValues);
+    event.preventDefault();
+  };
+
+  useEffect(() => {
+    setInputValues(Array(wordCount).fill(""));
+  }, [wordCount]);
   return (
     <>
       <BackButton action={back} />
@@ -238,35 +276,68 @@ const Screen4 = ({
             Secret Recovery Phrase
           </div>
           <div className="text-center text-slate-500 text-xl ">
-            Save these words in a safe place.
+            {isImport
+              ? "Enter or paste your 12 or 24-word phrase."
+              : `Save
+            these words in a safe place.`}
           </div>
-          <div className="text-center text-slate-500 text-xl ">
+          <div className="flex justify-center text-slate-500 text-xl ">
             <div onClick={back} className="text-center text-blue-500 text-xl ">
               Read the warning again
             </div>
           </div>
-        </div>
-        <div
-          onClick={() => {
-            copyPhrase();
-          }}
-          className="flex justify-center items-center flex-col overflow-hidden"
-        >
-          <div className="grid grid-cols-3   gap-2 rounded-tl-xl rounded-tr-xl p-5 text-md bg-zinc-800 w-3/4">
-            {words &&
-              words.map((w, i) => {
-                return (
-                  <div className="flex gap-2" key={i}>
-                    <span className="text-slate-500">{++i}</span>
-                    <span className="text-white">{w}</span>
-                  </div>
-                );
-              })}
-          </div>
-          <div className="border-t rounded-br-xl rounded-bl-xl p-2  text-gray-500 w-3/4 bg-zinc-800 text-center">
-            {copytext}
+          <div className="flex justify-center text-slate-500 text-xl ">
+            <div
+              onClick={() => setWordCount(wordCount == 12 ? 24 : 12)}
+              className="cursor-pointer text-center text-blue-500 text-xl "
+            >
+              Use {wordCount == 24 ? 12 : 24} words
+            </div>
           </div>
         </div>
+        {!isImport ? (
+          <div
+            onClick={() => {
+              copyPhrase();
+            }}
+            className="flex justify-center items-center flex-col overflow-hidden"
+          >
+            <div className="grid grid-cols-3   gap-2 rounded-tl-xl rounded-tr-xl p-5 text-md bg-zinc-800 w-3/4">
+              {words &&
+                words.map((w, i) => {
+                  return (
+                    <div className="flex gap-2" key={i}>
+                      <span className="text-slate-500">{++i}</span>
+                      <span className="text-white">{w}</span>
+                    </div>
+                  );
+                })}
+            </div>
+            <div className="border-t rounded-br-xl rounded-bl-xl p-2  text-gray-500 w-3/4 bg-zinc-800 text-center">
+              {copytext}
+            </div>
+          </div>
+        ) : (
+          <div className="flex justify-center items-center flex-col overflow-hidden">
+            <div className="grid grid-cols-4 gap-4">
+              {inputValues.map((value, index) => (
+                <input
+                  key={index}
+                  type="text"
+                  value={value}
+                  placeholder={`Input ${index + 1}`}
+                  onPaste={handlePaste}
+                  onChange={(e) => {
+                    const newValues = [...inputValues];
+                    newValues[index] = e.target.value;
+                    setInputValues(newValues);
+                  }}
+                  className="p-2 rounded bg-zinc-800 outline-none border-none text-zinc-300"
+                />
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="flex items-center justify-center">
           <input

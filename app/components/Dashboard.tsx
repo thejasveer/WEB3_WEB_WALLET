@@ -4,12 +4,12 @@ import { Wallets } from "./Wallets";
 
 export const Dashboard = () => {
   return (
-    <div className="grid grid-cols-12 h-[30rem] min-w-96 border-zinc-600 border rounded-md">
+    <div className="grid grid-cols-12 h-[30rem] min-w-96  border-zinc-600 border rounded-md">
       <div className="border-r border-zinc-600 col-span-2   p-2  overflow-scroll">
         <UserAccounts />
       </div>
 
-      <div className="col-span-10   p-2 overflow-auto ">
+      <div className="col-span-10   p-1 overflow-auto ">
         <Wallets />
       </div>
     </div>

@@ -5,6 +5,8 @@ import { Blockchain, Network, User, Wallet as WalletType } from "./../lib/user";
 import { Filter } from "./ui/Filter";
 import { generateEthWallet } from "../lib/eth";
 import { generateSolanaWallet } from "../lib/sol";
+import QRCode from "react-qr-code";
+type actionTabs = "RECEIVE" | "SEND" | "WALLETS" | "HOME";
 
 export const Wallets = () => {
   const [user, setUser] = useRecoilState(userAtom);
@@ -13,7 +15,8 @@ export const Wallets = () => {
   const [networks, setNetworks] = useState<Network[] | null>(null);
   const [selectedNetwork, setSelectedNetwork] = useState<Network | null>(null);
   const [selectedWallet, setSelectedWallet] = useState<WalletType | null>(null);
-  const [walletsToggle, setWalletToggle] = useState<boolean>(false);
+
+  const [activeTab, setActiveTab] = useState<actionTabs>("HOME");
 
   useEffect(() => {}, [selectedWallet]);
 
@@ -39,15 +42,16 @@ export const Wallets = () => {
     if (user) {
       const newUser = new User(user.accounts); // Create a new instance
       let response;
+
       if (selectedNetwork?.blockchain == "ETHEREUM") {
         response = await generateEthWallet(
-          selectedNetwork.wallets.length,
-          newUser.accounts[currentAccount].mnemonic
+          wallets?.length || 0,
+          newUser.accounts[currentAccount - 1].mnemonic
         );
       } else {
         response = await generateSolanaWallet(
-          selectedNetwork!.wallets.length,
-          newUser.accounts[currentAccount].mnemonic
+          wallets?.length || 0,
+          newUser.accounts[currentAccount - 1].mnemonic
         );
       }
 
@@ -64,6 +68,7 @@ export const Wallets = () => {
         );
         setUser((prev) => newUser);
         setSelectedWallet((prev) => response.wallet);
+        wallets && setWallets([...wallets, response.wallet!]);
         setWalletToggle(false);
         //update state
       }
@@ -72,10 +77,10 @@ export const Wallets = () => {
 
   return (
     <>
-      <div className=" relative flex flex-col items-center gap-5 w-full">
-        {walletsToggle && (
+      <div className=" w-96 relative flex flex-col items-center gap-5 ">
+        {activeTab != "HOME" && (
           <svg
-            onClick={() => setWalletToggle(false)}
+            onClick={() => setActiveTab("HOME")}
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
             fill="currentColor"
@@ -89,20 +94,28 @@ export const Wallets = () => {
           </svg>
         )}
 
-        <div className="text-zinc-300 text-2xl">Wallets</div>
-        <MenuBar
-          setWalletToggle={setWalletToggle}
-          networks={networks}
-          currNetwork={selectedNetwork}
-          setNetwork={setSelectedNetwork}
-          setNetworks={setNetworks}
-          setWallet={setSelectedWallet}
-          currWallet={selectedWallet}
-          setWallets={setWallets}
-        />
-        {walletsToggle ? (
-          <div className="flex flex-col gap-2">
+        {activeTab != "RECEIVE" && (
+          <div>
+            {" "}
+            <div className="text-zinc-300 text-2xl text-center mb-2">
+              Wallets
+            </div>
+            <MenuBar
+              setActiveTab={setActiveTab}
+              networks={networks}
+              currNetwork={selectedNetwork}
+              setNetwork={setSelectedNetwork}
+              setNetworks={setNetworks}
+              setWallet={setSelectedWallet}
+              currWallet={selectedWallet}
+              setWallets={setWallets}
+            />
+          </div>
+        )}
+        {activeTab == "WALLETS" && (
+          <div className="flex flex-col gap-2 w-full p-3">
             <WalletList
+              setActiveTab={setActiveTab}
               wallets={wallets}
               selectedWallet={selectedWallet}
               setSelectedWallet={setSelectedWallet}
@@ -115,14 +128,50 @@ export const Wallets = () => {
               + Add new {selectedNetwork?.blockchain} wallet
             </div>
           </div>
-        ) : (
+        )}
+        {activeTab == "HOME" && (
           <WalletDisplay
+            setActiveTab={setActiveTab}
             currNetwork={selectedNetwork}
             currWallet={selectedWallet}
           />
         )}
+        {activeTab == "RECEIVE" && (
+          <Receive
+            address={selectedWallet?.publicKey!}
+            network={selectedNetwork?.blockchain!}
+          />
+        )}
       </div>
     </>
+  );
+};
+
+export const Receive = ({
+  address,
+  network,
+}: {
+  network: string;
+  address: string;
+}) => {
+  return (
+    <div className="flex w-full gap-5 flex-col items-center p-5 ">
+      <div className="text-2xl ">Deposit</div>
+      <div className="size-1/2  border rounded-md p-1">
+        <QRCode
+          size={256}
+          style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+          value={address}
+          viewBox={`0 0 256 256`}
+        />
+      </div>
+      <button className="flex text-blue-600 ">
+        <CopyAddress address={address} />
+      </button>
+      <div className="text-center text-zinc-400">
+        This address can only recive assets on {network}
+      </div>
+    </div>
   );
 };
 
@@ -131,7 +180,9 @@ export const WalletList = ({
   selectedWallet,
   wallets,
   network,
+  setActiveTab,
 }: {
+  setActiveTab: any;
   setSelectedWallet: any;
   selectedWallet: WalletType | null;
   network: Network | null;
@@ -142,6 +193,7 @@ export const WalletList = ({
       {wallets?.map((w, i) => {
         return (
           <WalletDetails
+            setActiveTab={setActiveTab}
             key={"wd_" + i}
             setSelectedWallet={setSelectedWallet}
             selected={selectedWallet?.publicKey == w.publicKey}
@@ -159,79 +211,113 @@ const WalletDetails = ({
   selected,
   wallet,
   network,
+  setActiveTab,
 }: {
+  setActiveTab: any;
   setSelectedWallet: any;
   selected: Boolean;
   network: Network | null;
   wallet: WalletType | null;
 }) => {
+  const removeWalet = () => {};
+
   return (
     <div
-      onClick={() => setSelectedWallet(wallet)}
+      onClick={(e) => {
+        e.preventDefault();
+        setActiveTab("HOME");
+        setSelectedWallet(wallet);
+      }}
       className={`${
         selected && "border-2 border-blue-500"
       } p-5 flex  justify-between items-center gap-2 bg-zinc-800 rounded-lg`}
     >
-      <div className="flex gap-2 items-center">
+      <div className="flex w-full gap-2 items-center">
         <img
           className="size-8 rounded-full"
           src={`/${network?.blockchain}.png`}
           alt=""
         />
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1 w-full">
           <div className="text-zinc-300">{wallet?.title}</div>
-          <div className="text-zinc-500">
-            {wallet?.publicKey.substring(0, 4)}
-            {"..."}
-            {wallet?.publicKey.substring(
-              wallet?.publicKey.length - 5,
-              wallet?.publicKey.length - 1
-            )}
+          <div className="  text-zinc-500 flex justify-between gap-2 ">
+            <div> Public</div>
+            <CopyAddress address={wallet?.publicKey} />
+            <div>
+              {" "}
+              {wallet?.publicKey.substring(0, 4)}
+              {"........"}
+              {wallet?.publicKey.substring(
+                wallet?.publicKey.length - 5,
+                wallet?.publicKey.length
+              )}
+            </div>
           </div>
-          <div className="text-zinc-500 ">Copy private key </div>
+          <div className="text-zinc-500 flex justify-between gap-2 ">
+            <div> Private</div>
+            <CopyAddress address={wallet?.privateKey} />
+            <div>
+              {" "}
+              {wallet?.privateKey.substring(0, 4)}
+              {"........"}
+              {wallet?.privateKey.substring(
+                wallet?.privateKey.length - 5,
+                wallet?.privateKey.length
+              )}
+            </div>
+          </div>
         </div>
-      </div>
-
-      <div className="flex gap-2 ">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-          className="size-6 text-zinc-500"
-        >
-          <path d="M7.5 3.375c0-1.036.84-1.875 1.875-1.875h.375a3.75 3.75 0 0 1 3.75 3.75v1.875C13.5 8.161 14.34 9 15.375 9h1.875A3.75 3.75 0 0 1 21 12.75v3.375C21 17.16 20.16 18 19.125 18h-9.75A1.875 1.875 0 0 1 7.5 16.125V3.375Z" />
-          <path d="M15 5.25a5.23 5.23 0 0 0-1.279-3.434 9.768 9.768 0 0 1 6.963 6.963A5.23 5.23 0 0 0 17.25 7.5h-1.875A.375.375 0 0 1 15 7.125V5.25ZM4.875 6H6v10.125A3.375 3.375 0 0 0 9.375 19.5H16.5v1.125c0 1.035-.84 1.875-1.875 1.875h-9.75A1.875 1.875 0 0 1 3 20.625V7.875C3 6.839 3.84 6 4.875 6Z" />
-        </svg>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-          className="size-6 text-zinc-500"
-        >
-          <path
-            fillRule="evenodd"
-            d="M16.5 4.478v.227a48.816 48.816 0 0 1 3.878.512.75.75 0 1 1-.256 1.478l-.209-.035-1.005 13.07a3 3 0 0 1-2.991 2.77H8.084a3 3 0 0 1-2.991-2.77L4.087 6.66l-.209.035a.75.75 0 0 1-.256-1.478A48.567 48.567 0 0 1 7.5 4.705v-.227c0-1.564 1.213-2.9 2.816-2.951a52.662 52.662 0 0 1 3.369 0c1.603.051 2.815 1.387 2.815 2.951Zm-6.136-1.452a51.196 51.196 0 0 1 3.273 0C14.39 3.05 15 3.684 15 4.478v.113a49.488 49.488 0 0 0-6 0v-.113c0-.794.609-1.428 1.364-1.452Zm-.355 5.945a.75.75 0 1 0-1.5.058l.347 9a.75.75 0 1 0 1.499-.058l-.346-9Zm5.48.058a.75.75 0 1 0-1.498-.058l-.347 9a.75.75 0 0 0 1.5.058l.345-9Z"
-            clipRule="evenodd"
-          />
-        </svg>
       </div>
     </div>
   );
 };
 
+const CopyAddress = ({ address }: { address?: string }) => {
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    navigator.clipboard.writeText(address || "");
+    setCopied(true);
+  };
+  useEffect(() => {
+    setTimeout(() => setCopied(false), 2 * 1000);
+  }, [copied]);
+  return copied ? (
+    <div>Copied</div>
+  ) : (
+    <svg
+      onClick={(e) => {
+        e.stopPropagation();
+        copy();
+      }}
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className="size-6"
+    >
+      <path d="M7.5 3.375c0-1.036.84-1.875 1.875-1.875h.375a3.75 3.75 0 0 1 3.75 3.75v1.875C13.5 8.161 14.34 9 15.375 9h1.875A3.75 3.75 0 0 1 21 12.75v3.375C21 17.16 20.16 18 19.125 18h-9.75A1.875 1.875 0 0 1 7.5 16.125V3.375Z" />
+      <path d="M15 5.25a5.23 5.23 0 0 0-1.279-3.434 9.768 9.768 0 0 1 6.963 6.963A5.23 5.23 0 0 0 17.25 7.5h-1.875A.375.375 0 0 1 15 7.125V5.25ZM4.875 6H6v10.125A3.375 3.375 0 0 0 9.375 19.5H16.5v1.125c0 1.035-.84 1.875-1.875 1.875h-9.75A1.875 1.875 0 0 1 3 20.625V7.875C3 6.839 3.84 6 4.875 6Z" />
+    </svg>
+  );
+};
+
 export const WalletDisplay = ({
+  setActiveTab,
   currWallet,
   currNetwork,
 }: {
+  setActiveTab: any;
   currNetwork: Network | null;
   currWallet: WalletType | null;
 }) => {
   return (
-    <div className="flex flex-col gap-5 items-center w-full px-10">
+    <div className="flex flex-col gap-5 items-center w-full px-3">
       <div className="text-4xl font-bold text-white text-center ">$0.00</div>
       <div className="flex gap-5 text-zinc-500">
         <div>
-          <div className="rounded-full cursor-pointer hover:bg-zinc-800 bg-zinc-700 text-blue-500 p-3 w-max">
+          <div
+            className="rounded-full cursor-pointer hover:bg-zinc-800 bg-zinc-700 text-blue-500 p-3 w-max"
+            onClick={() => setActiveTab("RECEIVE")}
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
@@ -266,7 +352,7 @@ export const WalletDisplay = ({
         </div>
       </div>
 
-      <div className="bg-zinc-700 p-3 rounded-lg mt-5 w-full flex justify-between items-center text-zinc-300">
+      <div className=" rounded-lg mt-5 w-full flex justify-between items-center text-zinc-300">
         <div className="flex gap-5 items-center">
           <img
             className={`  size-10  rounded-full`}
@@ -282,7 +368,7 @@ export const WalletDisplay = ({
   );
 };
 const MenuBar = ({
-  setWalletToggle,
+  setActiveTab,
   networks,
   setNetwork,
   currNetwork,
@@ -291,7 +377,7 @@ const MenuBar = ({
   setNetworks,
   setWallets,
 }: {
-  setWalletToggle: any;
+  setActiveTab: any;
   setWallets: any;
   setNetworks: any;
   currWallet: WalletType | null;
@@ -368,6 +454,7 @@ const MenuBar = ({
       });
     return arr;
   }
+
   return (
     <div className="border-zinc-500 cursor-pointer  bg-zinc-700 text-white  border flex  items-center w-max rounded-full">
       <div className="border-r border-zinc-500">
@@ -379,7 +466,7 @@ const MenuBar = ({
           />
         )}
       </div>
-      <div className="" onClick={() => setWalletToggle(true)}>
+      <div className="" onClick={() => setActiveTab("WALLETS")}>
         <div className="px-2 flex items-center gap-2">
           {" "}
           <div>{currWallet?.title}</div>
@@ -398,15 +485,7 @@ const MenuBar = ({
         </div>
       </div>
       <div className="p-2 border-l  border-zinc-500">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-          className="size-6"
-        >
-          <path d="M7.5 3.375c0-1.036.84-1.875 1.875-1.875h.375a3.75 3.75 0 0 1 3.75 3.75v1.875C13.5 8.161 14.34 9 15.375 9h1.875A3.75 3.75 0 0 1 21 12.75v3.375C21 17.16 20.16 18 19.125 18h-9.75A1.875 1.875 0 0 1 7.5 16.125V3.375Z" />
-          <path d="M15 5.25a5.23 5.23 0 0 0-1.279-3.434 9.768 9.768 0 0 1 6.963 6.963A5.23 5.23 0 0 0 17.25 7.5h-1.875A.375.375 0 0 1 15 7.125V5.25ZM4.875 6H6v10.125A3.375 3.375 0 0 0 9.375 19.5H16.5v1.125c0 1.035-.84 1.875-1.875 1.875h-9.75A1.875 1.875 0 0 1 3 20.625V7.875C3 6.839 3.84 6 4.875 6Z" />
-        </svg>
+        <CopyAddress address={currWallet?.publicKey} />
       </div>
     </div>
   );
