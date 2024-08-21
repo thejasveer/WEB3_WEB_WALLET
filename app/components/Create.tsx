@@ -8,6 +8,7 @@ import { Blockchain, User } from "../lib/user";
 import { useRecoilState } from "recoil";
 import { userAtom } from "../store/userAtom";
 import { generateEthWallet } from "../lib/eth";
+import { useMessage } from "../hooks/useMessage";
 
 export const Create = () => {
   const [activeScreen, setActiveScreen] = useState<number>(1);
@@ -194,6 +195,7 @@ const Screen4 = ({
   const [wordCount, setWordCount] = useState(12);
   const [inputValues, setInputValues] = useState(Array(wordCount).fill(""));
   const [words, setWords] = useState<string[]>([]);
+  const { bark } = useMessage();
   const [copytext, setCopyText] = useState(
     "Click anywhere to copy in the card"
   );
@@ -243,6 +245,7 @@ const Screen4 = ({
         );
         setUser(newUser);
       }
+      bark({ message: "Account created successfully.", success: true });
       const path = "/?account=" + (accountIndex + 1);
       router.push(path);
     }

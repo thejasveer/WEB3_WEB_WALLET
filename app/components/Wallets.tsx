@@ -1,11 +1,16 @@
 import { useRecoilState, useRecoilValue } from "recoil";
-import { currentAccountAtom, userAtom } from "../store/userAtom";
-import { useState, useEffect } from "react";
+import { currentAccountAtom, isDevAtom, userAtom } from "../store/userAtom";
+import { useState, useEffect, useRef } from "react";
 import { Blockchain, Network, User, Wallet as WalletType } from "./../lib/user";
 import { Filter } from "./ui/Filter";
 import { generateEthWallet } from "../lib/eth";
 import { generateSolanaWallet } from "../lib/sol";
 import QRCode from "react-qr-code";
+import { useBalance } from "../hooks/useBalance";
+import { get } from "http";
+import { Spinner } from "./ui/Spinner";
+import { useMessage } from "../hooks/useMessage";
+
 type actionTabs = "RECEIVE" | "SEND" | "WALLETS" | "HOME";
 
 export const Wallets = () => {
@@ -17,7 +22,7 @@ export const Wallets = () => {
   const [selectedWallet, setSelectedWallet] = useState<WalletType | null>(null);
 
   const [activeTab, setActiveTab] = useState<actionTabs>("HOME");
-
+  const { bark } = useMessage();
   useEffect(() => {}, [selectedWallet]);
 
   useEffect(() => {
@@ -69,7 +74,8 @@ export const Wallets = () => {
         setUser((prev) => newUser);
         setSelectedWallet((prev) => response.wallet);
         wallets && setWallets([...wallets, response.wallet!]);
-        setWalletToggle(false);
+        setActiveTab("HOME");
+        bark({ message: "Wallet created successfully.", success: true });
         //update state
       }
     }
@@ -84,7 +90,7 @@ export const Wallets = () => {
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
             fill="currentColor"
-            className="size-6 absolute top-1  left-2 text-zinc-500"
+            className="size-6 absolute top-1 cursor-pointer  left-2 text-zinc-500"
           >
             <path
               fillRule="evenodd"
@@ -129,7 +135,7 @@ export const Wallets = () => {
             </div>
           </div>
         )}
-        {activeTab == "HOME" && (
+        {activeTab == "HOME" && selectedNetwork && selectedWallet && (
           <WalletDisplay
             setActiveTab={setActiveTab}
             currNetwork={selectedNetwork}
@@ -165,9 +171,18 @@ export const Receive = ({
           viewBox={`0 0 256 256`}
         />
       </div>
-      <button className="flex text-blue-600 ">
-        <CopyAddress address={address} />
-      </button>
+      <div className="flex gap-1  text-blue-600 ">
+        <div>
+          {" "}
+          {address.substring(0, 4)}
+          {"........"}
+          {address.substring(address.length - 5, address.length)}
+        </div>
+        <button className="flex">
+          <CopyAddress address={address} />
+        </button>
+      </div>
+
       <div className="text-center text-zinc-400">
         This address can only recive assets on {network}
       </div>
@@ -219,7 +234,7 @@ const WalletDetails = ({
   network: Network | null;
   wallet: WalletType | null;
 }) => {
-  const removeWalet = () => {};
+  //TODO remove Wallet
 
   return (
     <div
@@ -309,9 +324,32 @@ export const WalletDisplay = ({
   currNetwork: Network | null;
   currWallet: WalletType | null;
 }) => {
+  const isDev = useState(isDevAtom);
+  const { balance, getBalance, loading } = useBalance();
+  const prevWallet = useRef<WalletType | null>(null);
+
+  const prevNetwork = useRef<Network | null>(null);
+
+  useEffect(() => {
+    if (
+      currWallet?.publicKey &&
+      currNetwork?.blockchain &&
+      (currWallet?.publicKey !== prevWallet.current ||
+        currNetwork?.blockchain !== prevNetwork.current)
+    ) {
+      getBalance(currWallet.publicKey, currNetwork.blockchain);
+      prevWallet.current = currWallet.publicKey;
+      prevNetwork.current = currNetwork.blockchain;
+    }
+  }, [currWallet?.publicKey!, currNetwork?.blockchain, isDev]);
+  useEffect(() => {
+    getBalance(currWallet.publicKey, currNetwork.blockchain);
+  }, [isDev]);
   return (
     <div className="flex flex-col gap-5 items-center w-full px-3">
-      <div className="text-4xl font-bold text-white text-center ">$0.00</div>
+      <div className="text-4xl font-bold text-white text-center ">
+        {loading ? <Spinner /> : balance} {}{" "}
+      </div>
       <div className="flex gap-5 text-zinc-500">
         <div>
           <div
@@ -362,7 +400,10 @@ export const WalletDisplay = ({
 
           <div className="">{currNetwork?.blockchain}</div>
         </div>
-        <div className="text-xl">$0.00</div>
+        <div className="text-lg">
+          {" "}
+          {loading ? <Spinner /> : balance} {}{" "}
+        </div>
       </div>
     </div>
   );

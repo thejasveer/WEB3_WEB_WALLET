@@ -1,4 +1,4 @@
-import { Keypair } from "@solana/web3.js";
+import { Keypair, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import nacl from "tweetnacl";
 import { generateNewMnemonic } from "./utils";
 import { mnemonicToSeedSync, validateMnemonic } from "bip39";
@@ -6,6 +6,7 @@ import { derivePath } from "ed25519-hd-key";
 import bs58 from "bs58";
 import { Wallet } from "./user";
 
+export const SOL_UNIT = LAMPORTS_PER_SOL;
 export async function generateSolanaWallet(count: number, mnemonicStr: string) {
   let mnemonic = mnemonicStr.trim();
   if (mnemonic) {
@@ -47,3 +48,5 @@ export async function generateSolanaWallet(count: number, mnemonicStr: string) {
     return { err: true, msg: err, wallet: null };
   }
 }
+
+// export

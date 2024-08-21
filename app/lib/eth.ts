@@ -1,7 +1,9 @@
-import { Wallet as ETH_WALLET, HDNodeWallet } from "ethers";
+import { Wallet as ETH_WALLET, HDNodeWallet, WeiPerEther } from "ethers";
 import { mnemonicToSeedSync, validateMnemonic } from "bip39";
 import { Wallet } from "./user";
 import { generateNewMnemonic } from "./utils";
+
+export const Eth_Unit = WeiPerEther;
 export async function generateEthWallet(count: number, mnemonicStr: string) {
   let mnemonic = mnemonicStr.trim();
   if (mnemonic) {
