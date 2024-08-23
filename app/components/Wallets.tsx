@@ -145,7 +145,7 @@ export const Wallets = () => {
 
   return (
     <>
-      <div className=" w-96 relative flex h-full  flex-col items-center gap-5 ">
+      <div className="  relative flex h-full w-full flex-col items-center gap-5 ">
         {activeTab != "HOME" && (
           <svg
             onClick={() => setActiveTab("HOME")}

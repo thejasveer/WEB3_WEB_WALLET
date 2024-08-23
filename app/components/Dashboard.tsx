@@ -7,12 +7,12 @@ import { isDevAtom } from "../store/userAtom";
 export const Dashboard = () => {
   const [isDev, setDev] = useRecoilState(isDevAtom);
   return (
-    <div className="grid grid-cols-12 h-[30rem] min-w-96  border-zinc-600 border rounded-md">
+    <div className="grid grid-cols-12 h-[30rem]  min-w-96  border-zinc-600 border rounded-md">
       <div className="border-r border-zinc-600 col-span-2   p-2  overflow-scroll">
         <UserAccounts />
       </div>
 
-      <div className="relative col-span-10   p-1 overflow-auto ">
+      <div className="relative col-span-10   p-1 w-full ">
         <Wallets />
         <div className="absolute top-2 right-2">
           <label className=" flex flex-col sm:flex-row items-center mb-5 cursor-pointer">

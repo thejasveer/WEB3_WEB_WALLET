@@ -305,9 +305,9 @@ const Screen4 = ({
             onClick={() => {
               copyPhrase();
             }}
-            className="flex justify-center items-center flex-col overflow-hidden"
+            className="flex justify-center items-center flex-col w-full "
           >
-            <div className="grid grid-cols-3   gap-2 rounded-tl-xl rounded-tr-xl p-5 text-md bg-zinc-800 w-3/4">
+            <div className="overflow-scroll grid grid-cols-2 sm:grid-cols-3   gap-2 rounded-tl-xl rounded-tr-xl p-5 text-md bg-zinc-800 w-full sm:w-3/4">
               {words &&
                 words.map((w, i) => {
                   return (
@@ -318,13 +318,13 @@ const Screen4 = ({
                   );
                 })}
             </div>
-            <div className="border-t rounded-br-xl rounded-bl-xl p-2  text-gray-500 w-3/4 bg-zinc-800 text-center">
+            <div className="border-t rounded-br-xl rounded-bl-xl p-2  text-gray-500 w-full sm:w-3/4 bg-zinc-800 text-center">
               {copytext}
             </div>
           </div>
         ) : (
-          <div className="flex justify-center items-center flex-col overflow-hidden">
-            <div className="grid grid-cols-4 gap-4">
+          <div className="flex justify-center items-center flex-col w-full ">
+            <div className=" grid grid-cols-2 sm:grid-cols-3   gap-4">
               {inputValues.map((value, index) => (
                 <input
                   key={index}
