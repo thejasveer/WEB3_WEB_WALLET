@@ -26,7 +26,7 @@ export default function RootLayout({
 
           <Provider>
             <div className="p-5 flex justify-center items-center h-full">
-              {children}
+              <div> {children}</div>
             </div>
             <ToastContainer />
           </Provider>
