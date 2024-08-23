@@ -31,7 +31,7 @@ export const UserAccounts = () => {
     router.push(path);
   }
   function generateNewAccouunt() {
-    router.push("/create");
+    router.push("/Create");
   }
   return (
     <div className="flex flex-col gap-2 items-center ">
