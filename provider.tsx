@@ -26,8 +26,8 @@ const SessionComp = ({ children }: { children: React.ReactNode }) => {
       const initialUser = new User(parsedUser.accounts);
       setUser((prev: any) => initialUser);
       localStorage.setItem("user", JSON.stringify(initialUser));
-      setLs(true);
     }
+    setLs(true);
   }, []);
   useEffect(() => {
     localStorage.setItem("user", JSON.stringify(user));
