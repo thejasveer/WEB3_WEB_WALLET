@@ -23,7 +23,10 @@ export const Create = () => {
     case 1:
       return (
         <Screen1
-          action1={() => setActiveScreen(2)}
+          action1={() => {
+            setIsImport(false);
+            setActiveScreen(2);
+          }}
           action2={() => {
             setIsImport(true);
             setActiveScreen(2);
@@ -291,15 +294,18 @@ const Screen4 = ({
               Read the warning again
             </div>
           </div>
-          <div className="flex justify-center text-slate-500 text-xl ">
-            <div
-              onClick={() => setWordCount(wordCount == 12 ? 24 : 12)}
-              className="cursor-pointer text-center text-blue-500 text-xl "
-            >
-              Use {wordCount == 24 ? 12 : 24} words
+          {isImport && (
+            <div className="flex justify-center text-slate-500 text-xl ">
+              <div
+                onClick={() => setWordCount(wordCount == 12 ? 24 : 12)}
+                className="cursor-pointer text-center text-blue-500 text-xl "
+              >
+                Use {wordCount == 24 ? 12 : 24} words
+              </div>
             </div>
-          </div>
+          )}
         </div>
+
         {!isImport ? (
           <div
             onClick={() => {
