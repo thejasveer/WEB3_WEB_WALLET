@@ -19,18 +19,17 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <Provider>
-          <main className="flex min-h-screen flex-col items-center bg-black  p-24">
-            <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm ">
-              <p className=" left-0 top-0 flex  justify-center border-b    border-neutral-800 text-zinc-300    from-inherit lg:static   w-auto   rounded-xl  border  p-4 bg-zinc-800/30">
-                Simple web based wallet
-              </p>
-            </div>
-
-            <div className="p-5">{children}</div>
-          </main>
-          <ToastContainer />
-        </Provider>
+        <main className="flex min-h-screen flex-col items-center bg-black  p-24 h-full ">
+          <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm ">
+            <p className=" left-0 top-0 flex  justify-center border-b    border-neutral-800 text-zinc-300    from-inherit lg:static   w-auto   rounded-xl  border  p-4 bg-zinc-800/30">
+              Simple web based wallet
+            </p>
+          </div>{" "}
+          <Provider>
+            <div className="p-5 h-full">{children}</div>
+            <ToastContainer />
+          </Provider>
+        </main>
       </body>
     </html>
   );

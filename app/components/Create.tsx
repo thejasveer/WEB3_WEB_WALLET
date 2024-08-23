@@ -6,7 +6,7 @@ import { generateSolanaWallet } from "../lib/sol";
 
 import { Blockchain, User } from "../lib/user";
 import { useRecoilState } from "recoil";
-import { userAtom } from "../store/userAtom";
+import { currentAccountAtom, userAtom } from "../store/userAtom";
 import { generateEthWallet } from "../lib/eth";
 import { useMessage } from "../hooks/useMessage";
 
@@ -199,6 +199,7 @@ const Screen4 = ({
   const [copytext, setCopyText] = useState(
     "Click anywhere to copy in the card"
   );
+  const [currentAccount, setAccounts] = useRecoilState(currentAccountAtom);
   const router = useRouter();
   useEffect(() => {
     setTimeout(() => {
@@ -245,6 +246,7 @@ const Screen4 = ({
         );
         setUser(newUser);
       }
+      setAccounts(accountIndex);
       bark({ message: "Account created successfully.", success: true });
       const path = "/?account=" + (accountIndex + 1);
       router.push(path);

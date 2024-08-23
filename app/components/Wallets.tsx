@@ -1,16 +1,26 @@
-import { useRecoilState, useRecoilValue } from "recoil";
-import { currentAccountAtom, isDevAtom, userAtom } from "../store/userAtom";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
+import {
+  currentNetworkIndexAtom,
+  currentAccountAtom,
+  isDevAtom,
+  userAtom,
+  currentWalletIndexAtom,
+  balanceAtom,
+  Balance,
+} from "../store/userAtom";
 import { useState, useEffect, useRef } from "react";
 import { Blockchain, Network, User, Wallet as WalletType } from "./../lib/user";
 import { Filter } from "./ui/Filter";
 import { generateEthWallet } from "../lib/eth";
 import { generateSolanaWallet } from "../lib/sol";
 import QRCode from "react-qr-code";
-import { useBalance } from "../hooks/useBalance";
+import { useBalance, useTransfer } from "../hooks/useBalance";
 import { get } from "http";
 import { Spinner } from "./ui/Spinner";
 import { useMessage } from "../hooks/useMessage";
-
+import { AccountD } from "./UserAccounts";
+import { BackButton, Button, DarkButton } from "./ui/Button";
+import { useRouter } from "next/navigation";
 type actionTabs = "RECEIVE" | "SEND" | "WALLETS" | "HOME";
 
 export const Wallets = () => {
@@ -23,25 +33,77 @@ export const Wallets = () => {
 
   const [activeTab, setActiveTab] = useState<actionTabs>("HOME");
   const { bark } = useMessage();
-  useEffect(() => {}, [selectedWallet]);
+
+  const prevNetwork = useRef<Network | null>(null);
+  const prevWallet = useRef<WalletType | null>(null);
+  const isDev = useRecoilValue(isDevAtom);
+  const { getBalance, loading } = useBalance();
+
+  const [currentNetworkIndex, setCurrentNetworkIndex] = useRecoilState(
+    currentNetworkIndexAtom
+  );
+  const [currentWalletIndex, setCurrentWalletIndex] = useRecoilState(
+    currentWalletIndexAtom
+  );
+  const [refreshBalance, setRefreshBalance] = useState<number>(1);
 
   useEffect(() => {
     const networks = user?.accounts[currentAccount - 1]?.networks;
 
     if (networks) {
       setNetworks(networks);
-      const network = networks[0];
+
+      const network = networks[currentNetworkIndex];
       setSelectedNetwork(network);
+
       const wallets = network.wallets;
       if (wallets) {
         setWallets(wallets);
       }
-      const wallet = network.wallets[0];
+      const wallet = network.wallets[currentWalletIndex];
       if (wallet) {
         setSelectedWallet(wallet);
       }
     }
-  }, [currentAccount]);
+  }, [currentAccount, refreshBalance, currentWalletIndex, currentNetworkIndex]);
+
+  useEffect(() => {
+    getBalance(selectedWallet?.publicKey!, selectedNetwork?.blockchain!);
+  }, [refreshBalance]);
+
+  useEffect(() => {
+    if (
+      selectedWallet?.publicKey &&
+      selectedNetwork?.blockchain &&
+      (selectedWallet?.publicKey !== prevWallet.current?.publicKey ||
+        selectedNetwork?.blockchain !== prevNetwork.current?.blockchain)
+    ) {
+      getBalance(selectedWallet?.publicKey!, selectedNetwork?.blockchain!);
+      prevWallet.current = selectedWallet;
+      prevNetwork.current = selectedNetwork;
+    }
+    return () => {
+      prevWallet.current = null;
+      prevNetwork.current = null;
+    };
+  }, [isDev]);
+
+  useEffect(() => {
+    if (
+      selectedWallet?.publicKey &&
+      selectedNetwork?.blockchain &&
+      (selectedWallet?.publicKey !== prevWallet.current?.publicKey ||
+        selectedNetwork?.blockchain !== prevNetwork.current?.blockchain)
+    ) {
+      getBalance(selectedWallet?.publicKey!, selectedNetwork?.blockchain!);
+      prevWallet.current = selectedWallet;
+      prevNetwork.current = selectedNetwork;
+    }
+    return () => {
+      prevWallet.current = null;
+      prevNetwork.current = null;
+    };
+  }, [selectedWallet?.publicKey!, selectedNetwork?.blockchain]);
 
   async function AddWallet() {
     if (user) {
@@ -83,7 +145,7 @@ export const Wallets = () => {
 
   return (
     <>
-      <div className=" w-96 relative flex flex-col items-center gap-5 ">
+      <div className=" w-96 relative flex h-full  flex-col items-center gap-5 ">
         {activeTab != "HOME" && (
           <svg
             onClick={() => setActiveTab("HOME")}
@@ -100,7 +162,7 @@ export const Wallets = () => {
           </svg>
         )}
 
-        {activeTab != "RECEIVE" && (
+        {activeTab != "RECEIVE" && activeTab != "SEND" && (
           <div>
             {" "}
             <div className="text-zinc-300 text-2xl text-center mb-2">
@@ -137,9 +199,12 @@ export const Wallets = () => {
         )}
         {activeTab == "HOME" && selectedNetwork && selectedWallet && (
           <WalletDisplay
+            loading={loading}
             setActiveTab={setActiveTab}
             currNetwork={selectedNetwork}
             currWallet={selectedWallet}
+            activeTab={activeTab}
+            setRefreshBalance={setRefreshBalance}
           />
         )}
         {activeTab == "RECEIVE" && (
@@ -148,8 +213,208 @@ export const Wallets = () => {
             network={selectedNetwork?.blockchain!}
           />
         )}
+        {activeTab == "SEND" && (
+          <Send
+            setRefreshBalance={setRefreshBalance}
+            loading={loading}
+            getBalance={getBalance}
+            setWallet={setSelectedWallet}
+            setActiveTab={setActiveTab}
+            setNetwork={setSelectedNetwork}
+            selectedWallet={selectedWallet}
+            wallets={wallets}
+            wallet={selectedWallet!}
+            network={selectedNetwork}
+          />
+        )}
       </div>
     </>
+  );
+};
+
+type SEND_TAB = "1" | "2";
+
+export const Send = ({
+  setRefreshBalance,
+
+  getBalance,
+  setWallet,
+  setActiveTab,
+  setNetwork,
+  wallets,
+  selectedWallet,
+  wallet,
+  network,
+}: {
+  getBalance: any;
+  setRefreshBalance: any;
+  loading: boolean;
+
+  setWallet: any;
+  setNetwork: any;
+  setActiveTab: any;
+  selectedWallet: WalletType | null;
+  wallets: WalletType[] | undefined;
+  network: Network | null;
+  wallet: WalletType | null;
+}) => {
+  const router = useRouter();
+  const [to, setTo] = useState<string>("");
+  const [tab, setTab] = useState<SEND_TAB>("1");
+  const [amount, setAmount] = useState<string>("0");
+  const { currAmount, currAmountStr } = useRecoilValue(balanceAtom);
+
+  const { transferSol, transferETH, transferLoading } = useTransfer();
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
+
+  const handleSend = async () => {
+    if (network?.blockchain == "SOLANA") {
+      await transferSol(wallet!, to, amount, setRefreshBalance);
+    } else {
+      await transferETH(wallet!, to, amount, setRefreshBalance);
+    }
+    getBalance(selectedWallet?.publicKey!, network!.blockchain);
+    setActiveTab("HOME");
+  };
+
+  return (
+    <div className="flex flex-col  w-full gap-5 items-center   h-full  p-5 ">
+      <div className="text-2xl ">Send</div>
+
+      {tab == "1" && (
+        <div className="flex flex-col justify-between w-full  h-full ">
+          <div>
+            <input
+              value={to}
+              onChange={(e) => setTo(e.target.value)}
+              className="appearance-none block w-full bg-zinc-800 text-zinc-300 outline-none  rounded py-3 px-4 mb-3 leading-tight focus:outline-none text-sm "
+              type="text"
+              placeholder="Enter address"
+            />
+
+            <div className=" w-full text-zinc-600  text-xs text-left">
+              <label>Your Adresses</label>
+            </div>
+
+            <div className=" w-full overflow-scroll  bg-zinc-900 p-2 gap-10 border border-zinc-700 rounded-lg">
+              <div>
+                {wallets?.length! > 1 ? (
+                  <div>
+                    {wallets?.map((w: WalletType, i: number) => {
+                      return (
+                        w.publicKey != selectedWallet?.publicKey && (
+                          <div
+                            key={"wwww_" + i}
+                            className="flex gap-3 items-center"
+                            onClick={() => {
+                              setTo(w.publicKey);
+                            }}
+                          >
+                            <AccountD
+                              text={`A${i + 1}`}
+                              key={"account_" + i}
+                              action={() => {}}
+                            />
+                            <div className="text-lg text-zinc-200">
+                              {" "}
+                              Wallet {i + 1}
+                            </div>
+                          </div>
+                        )
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center text-zinc-400  gap-10 ">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      className="size-6"
+                    >
+                      <path d="M2.273 5.625A4.483 4.483 0 0 1 5.25 4.5h13.5c1.141 0 2.183.425 2.977 1.125A3 3 0 0 0 18.75 3H5.25a3 3 0 0 0-2.977 2.625ZM2.273 8.625A4.483 4.483 0 0 1 5.25 7.5h13.5c1.141 0 2.183.425 2.977 1.125A3 3 0 0 0 18.75 6H5.25a3 3 0 0 0-2.977 2.625ZM5.25 9a3 3 0 0 0-3 3v6a3 3 0 0 0 3 3h13.5a3 3 0 0 0 3-3v-6a3 3 0 0 0-3-3H15a.75.75 0 0 0-.75.75 2.25 2.25 0 0 1-4.5 0A.75.75 0 0 0 9 9H5.25Z" />
+                    </svg>
+                    <div>No additional wallets found</div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="w-full  ">
+            <DarkButton
+              disabled={
+                (to.length != 44 && network?.blockchain == "SOLANA") ||
+                (to.length != 42 && network?.blockchain == "ETHEREUM")
+              }
+              text={"Next"}
+              action={() => setTab("2")}
+            />
+          </div>
+        </div>
+      )}
+      {tab == "2" && (
+        <div className="w-full h-full ">
+          <BackButton action={() => setTab("1")} />
+
+          <div className="flex flex-col items-center justify-between h-full p-2 ">
+            <div className="text-zinc-500 flex flex-col items-center gap-2">
+              <div className="text-xl text-center">To</div>
+              <div className="flex justify-center gap-2 p-1 rounded-md bg-zinc-800 text-zinc-400 w-max">
+                <WalletDisplayKey address={to} />
+                <CopyAddress address={to} />
+              </div>
+              <div className="w-full flex flex-col items-center">
+                <input
+                  ref={inputRef}
+                  value={amount}
+                  onChange={(e) => {
+                    let input = e.target.value;
+
+                    // Check if input is a valid number or decimal
+                    if (input === "" || /^\d*\.?\d*$/.test(input)) {
+                      setAmount(input);
+                    }
+                  }}
+                  className="appearance-none block w-full bg-transparent text-zinc-300 outline-none rounded py-3 px-4 mb-3 leading-tight focus:outline-none text-5xl   text-center"
+                  type="text"
+                  placeholder="Enter amount"
+                />
+                <div className="flex items-center gap-1 text-xl">
+                  <img
+                    src={`/${network?.blockchain}.png`}
+                    alt=""
+                    className="size-8 rounded-full"
+                  />
+                  {network?.blockchain == "SOLANA" ? "SOL" : "ETH"}
+                </div>
+              </div>
+              <div className="flex justify-center gap-2 p-1 rounded-md bg-zinc-900 text-zinc-400 w-max text-sm">
+                <div>Max:</div>
+                <div>{currAmountStr}</div>
+              </div>
+            </div>
+            <div className="w-full  mb-1">
+              <DarkButton
+                loading={transferLoading}
+                action={() => {
+                  handleSend();
+                }}
+                disabled={currAmount < Number(amount) || Number(amount) == 0}
+                text={
+                  currAmount >= Number(amount) ? "SEND" : "Insufficient Balance"
+                }
+              />
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 
@@ -190,6 +455,17 @@ export const Receive = ({
   );
 };
 
+const WalletDisplayKey = ({ address }: { address: string }) => {
+  return (
+    <div>
+      {" "}
+      {address.substring(0, 4)}
+      {"........"}
+      {address.substring(address.length - 5, address.length)}
+    </div>
+  );
+};
+
 export const WalletList = ({
   setSelectedWallet,
   selectedWallet,
@@ -214,6 +490,7 @@ export const WalletList = ({
             selected={selectedWallet?.publicKey == w.publicKey}
             wallet={w}
             network={network}
+            index={i}
           />
         );
       })}
@@ -222,12 +499,14 @@ export const WalletList = ({
 };
 
 const WalletDetails = ({
+  index,
   setSelectedWallet,
   selected,
   wallet,
   network,
   setActiveTab,
 }: {
+  index: number;
   setActiveTab: any;
   setSelectedWallet: any;
   selected: Boolean;
@@ -235,13 +514,14 @@ const WalletDetails = ({
   wallet: WalletType | null;
 }) => {
   //TODO remove Wallet
-
+  const setCurrentWalletIndex = useSetRecoilState(currentWalletIndexAtom);
   return (
     <div
       onClick={(e) => {
         e.preventDefault();
         setActiveTab("HOME");
         setSelectedWallet(wallet);
+        setCurrentWalletIndex(index);
       }}
       className={`${
         selected && "border-2 border-blue-500"
@@ -258,28 +538,12 @@ const WalletDetails = ({
           <div className="  text-zinc-500 flex justify-between gap-2 ">
             <div> Public</div>
             <CopyAddress address={wallet?.publicKey} />
-            <div>
-              {" "}
-              {wallet?.publicKey.substring(0, 4)}
-              {"........"}
-              {wallet?.publicKey.substring(
-                wallet?.publicKey.length - 5,
-                wallet?.publicKey.length
-              )}
-            </div>
+            <WalletDisplayKey address={wallet?.publicKey!} />
           </div>
           <div className="text-zinc-500 flex justify-between gap-2 ">
             <div> Private</div>
             <CopyAddress address={wallet?.privateKey} />
-            <div>
-              {" "}
-              {wallet?.privateKey.substring(0, 4)}
-              {"........"}
-              {wallet?.privateKey.substring(
-                wallet?.privateKey.length - 5,
-                wallet?.privateKey.length
-              )}
-            </div>
+            <WalletDisplayKey address={wallet?.privateKey!} />
           </div>
         </div>
       </div>
@@ -319,36 +583,42 @@ export const WalletDisplay = ({
   setActiveTab,
   currWallet,
   currNetwork,
+  activeTab,
+  setRefreshBalance,
+  loading,
 }: {
+  loading: boolean;
+  setRefreshBalance: any;
   setActiveTab: any;
   currNetwork: Network | null;
   currWallet: WalletType | null;
+  activeTab: actionTabs;
 }) => {
-  const isDev = useState(isDevAtom);
-  const { balance, getBalance, loading } = useBalance();
-  const prevWallet = useRef<WalletType | null>(null);
-
-  const prevNetwork = useRef<Network | null>(null);
-
-  useEffect(() => {
-    if (
-      currWallet?.publicKey &&
-      currNetwork?.blockchain &&
-      (currWallet?.publicKey !== prevWallet.current ||
-        currNetwork?.blockchain !== prevNetwork.current)
-    ) {
-      getBalance(currWallet.publicKey, currNetwork.blockchain);
-      prevWallet.current = currWallet.publicKey;
-      prevNetwork.current = currNetwork.blockchain;
-    }
-  }, [currWallet?.publicKey!, currNetwork?.blockchain, isDev]);
-  useEffect(() => {
-    getBalance(currWallet.publicKey, currNetwork.blockchain);
-  }, [isDev]);
+  const { currAmountStr } = useRecoilValue(balanceAtom);
   return (
     <div className="flex flex-col gap-5 items-center w-full px-3">
       <div className="text-4xl font-bold text-white text-center ">
-        {loading ? <Spinner /> : balance} {}{" "}
+        {loading ? <Spinner /> : currAmountStr} {}{" "}
+      </div>
+      <div
+        className="flex gap-1 cursor-pointer"
+        onClick={() => {
+          setRefreshBalance((prev: number) => prev + 1);
+        }}
+      >
+        <div>Refresh Balance</div>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          className="size-3"
+        >
+          <path
+            fillRule="evenodd"
+            d="M4.755 10.059a7.5 7.5 0 0 1 12.548-3.364l1.903 1.903h-3.183a.75.75 0 1 0 0 1.5h4.992a.75.75 0 0 0 .75-.75V4.356a.75.75 0 0 0-1.5 0v3.18l-1.9-1.9A9 9 0 0 0 3.306 9.67a.75.75 0 1 0 1.45.388Zm15.408 3.352a.75.75 0 0 0-.919.53 7.5 7.5 0 0 1-12.548 3.364l-1.902-1.903h3.183a.75.75 0 0 0 0-1.5H2.984a.75.75 0 0 0-.75.75v4.992a.75.75 0 0 0 1.5 0v-3.18l1.9 1.9a9 9 0 0 0 15.059-4.035.75.75 0 0 0-.53-.918Z"
+            clipRule="evenodd"
+          />
+        </svg>
       </div>
       <div className="flex gap-5 text-zinc-500">
         <div>
@@ -372,7 +642,10 @@ export const WalletDisplay = ({
           <div className="text-center">Receive</div>
         </div>
         <div>
-          <div className="rounded-full cursor-pointer  hover:bg-zinc-800 bg-zinc-700 text-blue-500 p-3 w-max">
+          <div
+            onClick={() => setActiveTab("SEND")}
+            className="rounded-full cursor-pointer  hover:bg-zinc-800 bg-zinc-700 text-blue-500 p-3 w-max"
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
@@ -402,7 +675,7 @@ export const WalletDisplay = ({
         </div>
         <div className="text-lg">
           {" "}
-          {loading ? <Spinner /> : balance} {}{" "}
+          {loading ? <Spinner /> : currAmountStr} {}{" "}
         </div>
       </div>
     </div>
@@ -429,7 +702,11 @@ const MenuBar = ({
 }) => {
   const [user, setUser] = useRecoilState(userAtom);
   const currentAccount = useRecoilValue(currentAccountAtom);
-  const [currentNetworkIndex, setCurrentNetworkIndex] = useState(0);
+  const [currentNetworkIndex, setCurrentNetworkIndex] = useRecoilState(
+    currentNetworkIndexAtom
+  );
+
+  const currentWalletIndex = useRecoilValue(currentWalletIndexAtom);
   async function AddNetwork(blockchain: Blockchain) {
     if (user) {
       const newUser = new User(user?.accounts);
@@ -455,6 +732,7 @@ const MenuBar = ({
         setWallet(() => response.wallet);
 
         setUser(newUser);
+
         setCurrentNetworkIndex(networkIndex);
       }
     }
@@ -464,24 +742,27 @@ const MenuBar = ({
 
     if (networks) {
       setNetworks(networks);
+
       const network = networks[currentNetworkIndex];
       setNetwork(network);
       const wallets = network.wallets;
       if (wallets) {
         setWallets(wallets);
       }
-      const wallet = network.wallets[0];
+      const wallet = network.wallets[currentWalletIndex];
       if (wallet) {
         setWallet(wallet);
       }
     }
-  }, [currentNetworkIndex]);
+  }, [currentNetworkIndex, currentWalletIndex]);
 
   function modifyNetworkDropdown() {
     const arr = networks?.map((w, i) => {
       return {
         name: w.blockchain,
-        action: () => setCurrentNetworkIndex(i),
+        action: () => {
+          setCurrentNetworkIndex(i);
+        },
         selected: currNetwork?.blockchain == w.blockchain,
       };
     });

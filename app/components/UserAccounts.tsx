@@ -54,14 +54,14 @@ export const UserAccounts = () => {
   );
 };
 
-const AccountD = ({
+export const AccountD = ({
   text,
   selected,
   action,
 }: {
   action: any;
   text: string;
-  selected: boolean;
+  selected?: boolean;
 }) => {
   return (
     <div

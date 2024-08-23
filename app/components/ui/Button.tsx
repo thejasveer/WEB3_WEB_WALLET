@@ -1,3 +1,5 @@
+import { Spinner } from "./Spinner";
+
 export const Button = ({ text, action }: { action: any; text: string }) => {
   return (
     <button
@@ -11,10 +13,12 @@ export const Button = ({ text, action }: { action: any; text: string }) => {
 };
 
 export const DarkButton = ({
+  loading = false,
   text,
   action,
   disabled,
 }: {
+  loading?: boolean;
   action: any;
   text: string;
   disabled?: boolean;
@@ -24,16 +28,16 @@ export const DarkButton = ({
       disabled={disabled}
       onClick={action}
       type="button"
-      className={`  cursor-pointer inline-block rounded  py-4 bg-neutral-800 px-6 pb-2 pt-2.5 text-xs font-medium uppercase leading-normal text-neutral-50 shadow-dark-3 transition duration-150 ease-in-out hover:bg-neutral-700 hover:shadow-dark-2 focus:bg-neutral-700 focus:shadow-dark-2 focus:outline-none focus:ring-0 active:bg-neutral-900 active:shadow-dark-2 motion-reduce:transition-none dark:shadow-black/30 dark:hover:shadow-dark-strong dark:focus:shadow-dark-strong dark:active:shadow-dark-strong`}
+      className={`w-full flex justify-center  gap-2  cursor-pointer   rounded  py-4 bg-neutral-800 px-6 pb-2 pt-2.5 text-xs font-medium uppercase leading-normal text-neutral-50 shadow-dark-3 transition duration-150 ease-in-out hover:bg-neutral-700 hover:shadow-dark-2 focus:bg-neutral-700 focus:shadow-dark-2 focus:outline-none focus:ring-0 active:bg-neutral-900 active:shadow-dark-2 motion-reduce:transition-none dark:shadow-black/30 dark:hover:shadow-dark-strong dark:focus:shadow-dark-strong dark:active:shadow-dark-strong`}
     >
-      {text}
+      <div>{loading ? <Spinner /> : text}</div>
     </button>
   );
 };
 
 export const BackButton = ({ action }: { action: any }) => {
   return (
-    <div className="flex gap-2 text-zinc-200" onClick={action}>
+    <div className="cursor-pointer flex gap-2 text-zinc-200" onClick={action}>
       <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 20 20"

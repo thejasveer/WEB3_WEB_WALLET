@@ -7,13 +7,18 @@ import { Create } from "./components/Create";
 import { useRecoilValue } from "recoil";
 import { userAtom } from "./store/userAtom";
 import { Dashboard } from "./components/Dashboard";
+import { Spinner } from "./components/ui/Spinner";
 export default function Home() {
   const user = useRecoilValue(userAtom);
-  console.log(user);
-
-  if (user?.getAccounts().length == 0) {
-    return <Create />;
+  if (user) {
+    if (user?.accounts.length == 0) {
+      return <Create />;
+    } else {
+      return <Dashboard />;
+    }
   } else {
-    return <Dashboard />;
+    <>
+      <Spinner />
+    </>;
   }
 }
