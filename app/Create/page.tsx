@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Create } from "../components/Create";
+import { CreateN } from "../components/CreateN";
 import { useRecoilValue } from "recoil";
 import { userAtom } from "../store/userAtom";
 
@@ -10,7 +10,7 @@ export default function Page() {
   return (
     <>
       {user?.accounts.length! > 0 && <MyWallets />}
-      <Create />
+      <CreateN />
     </>
   );
 }

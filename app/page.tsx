@@ -1,9 +1,6 @@
 "use client";
 
-import { Welcome } from "./components/Welcome";
-import { userAgentFromString } from "next/server";
-import { UserAccounts } from "./components/UserAccounts";
-import { Create } from "./components/Create";
+import { Create } from "./components/CreateN";
 import { useRecoilValue } from "recoil";
 import { userAtom } from "./store/userAtom";
 import { Dashboard } from "./components/Dashboard";

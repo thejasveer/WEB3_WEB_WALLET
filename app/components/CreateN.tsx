@@ -10,7 +10,7 @@ import { currentAccountAtom, userAtom } from "../store/userAtom";
 import { generateEthWallet } from "../lib/eth";
 import { useMessage } from "../hooks/useMessage";
 
-export const Create = () => {
+export const CreateN = () => {
   const [activeScreen, setActiveScreen] = useState<number>(1);
   const [blockchain, setBlockchain] = useState<Blockchain>();
   const [isImport, setIsImport] = useState(false);
