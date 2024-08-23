@@ -227,7 +227,6 @@ const Screen4 = ({
     if (user) {
       if (isImport) {
         mnemonic.current = inputValues.join(" ");
-        console.log(mnemonic);
       }
       const newUser = new User(user.accounts); // Create a new instance
       const accountIndex = newUser.createAccount(mnemonic.current, blockchain);

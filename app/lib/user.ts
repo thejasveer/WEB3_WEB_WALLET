@@ -1,5 +1,3 @@
-import { debug } from "console";
-
 export type Blockchain = "SOLANA" | "ETHEREUM" | "+ ADD NETWORK";
 export interface Wallet {
   privateKey: string;
@@ -33,7 +31,6 @@ export class User {
         ],
         mnemonic,
       };
-      console.log("Ss", this.accounts);
 
       this.accounts.push(newAccount);
       return this.accounts?.length - 1;

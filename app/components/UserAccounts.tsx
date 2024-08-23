@@ -1,17 +1,16 @@
 "use client";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Account } from "../lib/user";
+
 import { useEffect, useState } from "react";
 import { useRecoilState, useRecoilValue } from "recoil";
 import { currentAccountAtom, userAtom } from "../store/userAtom";
-import { redirect } from "next/navigation";
 
 export const UserAccounts = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentAccountIndex = searchParams.get("account");
   const user = useRecoilValue(userAtom);
-  const [accounts, setAccounts] = useState<Account[] | undefined>([]);
+
   const [currentAccount, setCurrentAccount] =
     useRecoilState(currentAccountAtom);
 
@@ -21,7 +20,7 @@ export const UserAccounts = () => {
   function selectAccount(i: number) {
     const currentParams = new URLSearchParams(
       Array.from(searchParams.entries())
-    ); // Get current search params
+    );
     currentParams.set("account", (i + 1).toString());
 
     router.replace(`?${currentParams.toString()}`, { scroll: false });

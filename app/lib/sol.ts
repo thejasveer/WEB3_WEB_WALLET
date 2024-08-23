@@ -22,13 +22,12 @@ export async function generateSolanaWallet(count: number, mnemonicStr: string) {
   }
   try {
     const seedBuffer = mnemonicToSeedSync(mnemonic);
-    // Generate a single wallet
+
     const path = `m/44'/501'/${count}'/0'`;
     const { key: derivedSeed } = derivePath(path, seedBuffer.toString("hex"));
     const { secretKey } = nacl.sign.keyPair.fromSeed(derivedSeed);
     const keypair = Keypair.fromSecretKey(secretKey);
 
-    // Encode both private and public keys to base58
     const privateKeyBase58 = bs58.encode(secretKey);
     const publicKeyBase58 = keypair.publicKey.toBase58();
 

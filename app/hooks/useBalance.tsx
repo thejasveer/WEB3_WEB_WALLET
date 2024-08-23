@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { Blockchain, Network, Wallet } from "../lib/user";
 import {
-  HDNodeWallet,
-  computeAddress,
   JsonRpcProvider,
   parseEther,
   parseUnits,
@@ -86,7 +84,7 @@ export const useBalance = () => {
 export const useTransfer = () => {
   const [transferLoading, setTransferLoading] = useState(false);
   const isDev = useRecoilValue(isDevAtom);
-  const [status, setStatus] = useState<boolean>(false);
+
   const { bark } = useMessage();
 
   async function transferSol(
@@ -152,7 +150,7 @@ export const useTransfer = () => {
   ) => {
     try {
       setTransferLoading(true);
-      setStatus(false);
+
       const host = isDev ? ETH_DEV : ETH_MAIN;
       const providerUrl = `https://${host}.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_API_KEY}`;
       const provider = new JsonRpcProvider(providerUrl);

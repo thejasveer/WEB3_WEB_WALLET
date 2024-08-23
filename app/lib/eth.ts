@@ -19,7 +19,7 @@ export async function generateEthWallet(count: number, mnemonicStr: string) {
   }
   try {
     const seedBuffer = mnemonicToSeedSync(mnemonic);
-    // Generate a single wallet
+
     const derivationPath = `m/44'/60'/${count}'/0'`;
     const hdNode = HDNodeWallet.fromSeed(seedBuffer);
     const child = hdNode.derivePath(derivationPath);
