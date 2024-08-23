@@ -49,7 +49,7 @@ export const useBalance = () => {
 
     try {
       const response = await axios.post(
-        `https://${host}.g.alchemy.com/v2/83RfH35YJdEKRnaUSvpXCZo7sQYvf7zk`,
+        `https://${host}.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_API_KEY}`,
         {
           id: 1,
           jsonrpc: "2.0",
@@ -154,7 +154,7 @@ export const useTransfer = () => {
       setTransferLoading(true);
       setStatus(false);
       const host = isDev ? ETH_DEV : ETH_MAIN;
-      const providerUrl = `https://${host}.g.alchemy.com/v2/${process.env.SECRET_API_KEY}`;
+      const providerUrl = `https://${host}.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_API_KEY}`;
       const provider = new JsonRpcProvider(providerUrl);
 
       const privateKey = fromWallet.privateKey;
