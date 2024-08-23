@@ -16,9 +16,7 @@ export const UserAccounts = () => {
     useRecoilState(currentAccountAtom);
 
   useEffect(() => {
-    console.log("ss", user);
     setCurrentAccount((prev) => Number(currentAccountIndex) ?? 0);
-    // setAccounts();
   }, [currentAccountIndex]);
   function selectAccount(i: number) {
     const currentParams = new URLSearchParams(
