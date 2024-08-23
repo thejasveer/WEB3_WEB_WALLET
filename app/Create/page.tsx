@@ -10,6 +10,7 @@ export default function Page() {
   return (
     <>
       {user?.accounts.length! > 0 && <MyWallets />}
+      {/* create new */}
       <CreateN />
     </>
   );
