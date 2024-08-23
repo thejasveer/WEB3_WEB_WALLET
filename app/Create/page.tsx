@@ -15,7 +15,7 @@ export default function Page() {
   );
 }
 
-export const MyWallets = () => {
+const MyWallets = () => {
   const router = useRouter();
   return (
     <div
