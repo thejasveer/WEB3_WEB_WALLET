@@ -6,7 +6,6 @@ import {
   userAtom,
   currentWalletIndexAtom,
   balanceAtom,
-  Balance,
 } from "../store/userAtom";
 import { useState, useEffect, useRef } from "react";
 import { Blockchain, Network, User, Wallet as WalletType } from "./../lib/user";
@@ -15,7 +14,7 @@ import { generateEthWallet } from "../lib/eth";
 import { generateSolanaWallet } from "../lib/sol";
 import QRCode from "react-qr-code";
 import { useBalance, useTransfer } from "../hooks/useBalance";
-import { get } from "http";
+
 import { Spinner } from "./ui/Spinner";
 import { useMessage } from "../hooks/useMessage";
 import { AccountD } from "./UserAccounts";
@@ -23,6 +22,7 @@ import { BackButton, Button, DarkButton } from "./ui/Button";
 import { useRouter } from "next/navigation";
 
 type actionTabs = "RECEIVE" | "SEND" | "WALLETS" | "HOME";
+type SEND_TAB = "1" | "2";
 
 export const Wallets = () => {
   const [user, setUser] = useRecoilState(userAtom);
@@ -40,12 +40,8 @@ export const Wallets = () => {
   const isDev = useRecoilValue(isDevAtom);
   const { getBalance, loading } = useBalance();
 
-  const [currentNetworkIndex, setCurrentNetworkIndex] = useRecoilState(
-    currentNetworkIndexAtom
-  );
-  const [currentWalletIndex, setCurrentWalletIndex] = useRecoilState(
-    currentWalletIndexAtom
-  );
+  const currentNetworkIndex = useRecoilValue(currentNetworkIndexAtom);
+  const currentWalletIndex = useRecoilValue(currentWalletIndexAtom);
   const [refreshBalance, setRefreshBalance] = useState<number>(1);
 
   useEffect(() => {
@@ -57,7 +53,7 @@ export const Wallets = () => {
       const network = networks[currentNetworkIndex];
       setSelectedNetwork(network);
 
-      const wallets = network.wallets;
+      const wallets = network?.wallets;
       if (wallets) {
         setWallets(wallets);
       }
@@ -233,8 +229,6 @@ export const Wallets = () => {
   );
 };
 
-type SEND_TAB = "1" | "2";
-
 export const Send = ({
   setRefreshBalance,
 
@@ -303,7 +297,7 @@ export const Send = ({
               <label>Your Adresses</label>
             </div>
 
-            <div className=" w-full overflow-scroll  bg-zinc-900 p-2 gap-10 border border-zinc-700 rounded-lg">
+            <div className=" w-full overflow-auto no-scrollbar  bg-zinc-900 p-2 gap-10 border border-zinc-700 rounded-lg">
               <div>
                 {wallets?.length! > 1 ? (
                   <div>

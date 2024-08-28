@@ -2,4 +2,4 @@
 
 ## DEMO -
 
-[WALLET.webm](https://web-3-web-wallet-c23a.vercel.app)
+[WALLET.webm](https://web-3-web-wallet.vercel.app/)

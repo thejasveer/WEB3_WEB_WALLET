@@ -312,7 +312,7 @@ const Screen4 = ({
             }}
             className="flex justify-center items-center flex-col w-full "
           >
-            <div className="overflow-scroll grid grid-cols-2 sm:grid-cols-3   gap-2 rounded-tl-xl rounded-tr-xl p-5 text-md bg-zinc-800 w-full sm:w-3/4">
+            <div className="overflow-y-scroll no-scrollbar grid grid-cols-2 sm:grid-cols-3   gap-2 rounded-tl-xl rounded-tr-xl p-5 text-md bg-zinc-800 w-full sm:w-3/4">
               {words &&
                 words.map((w, i) => {
                   return (
