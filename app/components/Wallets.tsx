@@ -166,6 +166,7 @@ export const Wallets = () => {
               Wallets
             </div>
             <MenuBar
+              showCarret={!(activeTab == "WALLETS")}
               setActiveTab={setActiveTab}
               networks={networks}
               currNetwork={selectedNetwork}
@@ -677,6 +678,7 @@ export const WalletDisplay = ({
   );
 };
 const MenuBar = ({
+  showCarret,
   setActiveTab,
   networks,
   setNetwork,
@@ -686,6 +688,7 @@ const MenuBar = ({
   setNetworks,
   setWallets,
 }: {
+  showCarret: boolean;
   setActiveTab: any;
   setWallets: any;
   setNetworks: any;
@@ -787,18 +790,20 @@ const MenuBar = ({
         <div className="px-2 flex items-center gap-2">
           {" "}
           <div>{currWallet?.title}</div>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-            className="size-6 "
-          >
-            <path
-              fillRule="evenodd"
-              d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z"
-              clipRule="evenodd"
-            />
-          </svg>
+          {showCarret && (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              className="size-6 "
+            >
+              <path
+                fillRule="evenodd"
+                d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z"
+                clipRule="evenodd"
+              />
+            </svg>
+          )}
         </div>
       </div>
       <div className="p-2 border-l  border-zinc-500">
