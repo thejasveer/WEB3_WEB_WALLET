@@ -15,7 +15,7 @@ export const Dropdown = ({
   };
   return (
     <div
-      className="relative   w-max   text-slate-500 "
+      className="relative z-50  w-max   text-slate-500 "
       onMouseLeave={handleD}
       onMouseEnter={handleD}
     >

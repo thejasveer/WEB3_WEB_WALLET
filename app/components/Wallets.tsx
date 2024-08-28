@@ -142,14 +142,14 @@ export const Wallets = () => {
 
   return (
     <>
-      <div className="  relative flex h-full w-full flex-col items-center gap-5 ">
+      <div className=" relative flex h-full w-full flex-col items-center gap-5 ">
         {activeTab != "HOME" && (
           <svg
             onClick={() => setActiveTab("HOME")}
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
             fill="currentColor"
-            className="size-6 absolute top-1 cursor-pointer  left-2 text-zinc-500"
+            className=" z-50 size-6 absolute top-1 cursor-pointer  left-2 text-zinc-500"
           >
             <path
               fillRule="evenodd"
@@ -279,7 +279,7 @@ export const Send = ({
   };
 
   return (
-    <div className="flex flex-col  w-full gap-5 items-center   h-full  p-5 ">
+    <div className=" animate-fade-left flex flex-col  w-full gap-5 items-center   h-full  p-5 ">
       <div className="text-2xl ">Send</div>
 
       {tab == "1" && (
@@ -421,7 +421,7 @@ export const Receive = ({
   address: string;
 }) => {
   return (
-    <div className="flex w-full gap-5 flex-col items-center p-5 ">
+    <div className="animate-fade-left flex w-full gap-5 flex-col items-center p-5 ">
       <div className="text-2xl ">Deposit</div>
       <div className="size-1/2  border rounded-md p-1">
         <QRCode
@@ -475,7 +475,7 @@ export const WalletList = ({
   wallets: WalletType[] | undefined;
 }) => {
   return (
-    <div className="w-full  flex flex-col gap-2 ">
+    <div className="w-full  flex flex-col gap-2 animate-fade-up">
       {wallets?.map((w, i) => {
         return (
           <WalletDetails
@@ -591,7 +591,7 @@ export const WalletDisplay = ({
 }) => {
   const { currAmountStr } = useRecoilValue(balanceAtom);
   return (
-    <div className="flex flex-col gap-5 items-center w-full px-3">
+    <div className="animate-fade-up flex flex-col gap-5 items-center w-full px-3">
       <div className="text-4xl font-bold text-white text-center ">
         {loading ? <Spinner /> : currAmountStr} {}{" "}
       </div>
@@ -774,7 +774,7 @@ const MenuBar = ({
 
   return (
     <div className="border-zinc-500 cursor-pointer  bg-zinc-700 text-white  border flex  items-center w-max rounded-full">
-      <div className="border-r border-zinc-500">
+      <div className="border-r border-zinc-500 z-100">
         {" "}
         {networks && (
           <Filter
